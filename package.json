@@ -1,0 +1,20 @@
+{
+  "name": "whoisoncall",
+  "version": "1.0.0",
+  "description": "docker run -v \"$PWD\":/var/task:ro,delegated -p 9000:8080 amazon/aws-lambda-python:3.8 lambda_function.lambda_handler",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1691.0",
+    "axios": "^1.7.7",
+    "body-parser": "^1.20.3",
+    "csv-parser": "^3.0.0",
+    "express": "^4.21.0"
+  }
+}
