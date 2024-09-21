@@ -7,30 +7,38 @@
 </head>
 <body>
     <h1>Who Is On Call</h1>
-    <form id="onCallForm">
-        <label for="onCallDate">Select Date:</label>
-        <input type="date" id="onCallDate" name="onCallDate">
-        <button type="submit">Get On Call</button>
-    </form>
-
+    
     <div id="onCallResult"></div>
-
+    
     <script>
-        document.getElementById('onCallForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const date = document.getElementById('onCallDate').value;
+        // Get the current date in YYYY-MM-DD format
+        const currentDate = new Date().toISOString().split('T')[0];
 
-            fetch('http://127.0.0.1:3001/getOnCall', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ date: date })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('onCallResult').innerText = `On Call: ${data.name}`;
-            });
+        // Fetch on-call information for the current date
+        fetch('http://127.0.0.1:3001/getOnCall', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ date: currentDate })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.currentOnCall && data.nextOnCall) {
+                document.getElementById('onCallResult').innerHTML = `
+                    <h2>Current On Call</h2>
+                    <p><strong>AWS:</strong> ${data.currentOnCall.aws.name} (${data.currentOnCall.aws.email})</p>
+                    <p><strong>Azure:</strong> ${data.currentOnCall.azure.name} (${data.currentOnCall.azure.email})</p>
+                    <h2>Next Week On Call</h2>
+                    <p><strong>AWS:</strong> ${data.nextOnCall.aws.name} (${data.nextOnCall.aws.email})</p>
+                    <p><strong>Azure:</strong> ${data.nextOnCall.azure.name} (${data.nextOnCall.azure.email})</p>
+                `;
+            } else {
+                document.getElementById('onCallResult').innerText = 'No on-call information available for this date.';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching on-call data:', error);
         });
     </script>
 </body>

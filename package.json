@@ -15,6 +15,7 @@
     "axios": "^1.7.7",
     "body-parser": "^1.20.3",
     "csv-parser": "^3.0.0",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "xlsx": "^0.18.5"
   }
 }

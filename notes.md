@@ -252,3 +252,25 @@ aws --endpoint-url=http://localhost:4566 lambda invoke --function-name process_c
 
 
 docker run --rm -it -p 4566:4566 -p 4571:4571 localstack/localstack
+
+### Zip file for lambda. Too large to upload to github.
+
+```
+zip -r lambda_function.zip .
+aws --endpoint-url=http://127.0.0.1:4566 lambda update-function-code --function-name process_csv --zip-file fileb://lambda_function.zip
+```
+
+### Invoke Lambda function
+
+```
+aws --endpoint-url=http://127.0.0.1:4566 lambda invoke --function-name process_csv --payload file://s3_event.json --cli-binary-format raw-in-base64-out response.json
+```
+
+npm install xlsx
+npm install aws-sdk csv-parser
+npm install helmet
+npm install express body-parser axios
+
+## Make zip file smaller
+
+zip -r lambda-function.zip . -x "node_modules/*" ".git/*" "*.npmignore"  
