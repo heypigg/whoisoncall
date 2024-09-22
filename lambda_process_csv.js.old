@@ -1,0 +1,75 @@
+const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const csv = require('csv-parser');
+
+// Initialize S3 and DynamoDB clients with LocalStack endpoint
+const s3 = new S3Client({ 
+    endpoint: 'http://host.docker.internal:4566', 
+    forcePathStyle: true 
+});
+const dynamodb = new DynamoDBClient({ endpoint: 'http://host.docker.internal:4566' });
+
+const DYNAMO_TABLE_NAME = 'OnCallSchedule';
+
+exports.handler = async (event) => {
+    console.log("Event: ", JSON.stringify(event, null, 2));
+
+    const bucketName = event.Records[0].s3.bucket.name;
+    const fileName = event.Records[0].s3.object.key;
+
+    console.log(`Bucket Name: ${bucketName}, File Name: ${fileName}`);
+
+    try {
+        const getObjectParams = { Bucket: bucketName, Key: fileName };
+        const command = new GetObjectCommand(getObjectParams);
+        const s3Response = await s3.send(command);
+
+        const s3Stream = s3Response.Body;
+        const parsedData = [];
+
+        // Parse the CSV data
+        await new Promise((resolve, reject) => {
+            s3Stream.pipe(csv())
+                .on('data', (row) => {
+                    console.log('Parsed Row:', row); // Log each row
+                    parsedData.push(row);
+                })
+                .on('end', () => {
+                    resolve();
+                })
+                .on('error', (error) => {
+                    reject(error);
+                });
+        });
+        
+        console.log('Parsed CSV Data:', JSON.stringify(parsedData, null, 2));
+
+        // Insert parsed data into DynamoDB with proper attribute formatting
+        for (const row of parsedData) {
+            const item = {
+                "ID": { "S": row.NTID },                // Partition key mapped to NTID
+                "Week #": { "N": row['Week #'] || '0' },  // Ensure 'Week #' is a number
+                "Start": { "S": row.Start || '1970-01-01' }, // Store Start as string (date in YYYY-MM-DD)
+                "End": { "S": row.End || '1970-01-01' },     // Store End as string (date in YYYY-MM-DD)
+                "CSP": { "S": row.CSP },                // Cloud Service Provider (AWS or Azure) as string
+                "Engineer": { "S": row.Engineer },      // Engineer's name as string
+                "Email": { "S": row.Email },            // Engineer's email as string
+                "Mobile": { "S": row.Mobile }           // Engineer's mobile number as string
+            };
+
+            console.log('DynamoDB Item:', JSON.stringify(item, null, 2));
+
+            const putParams = {
+                TableName: DYNAMO_TABLE_NAME,
+                Item: item
+            };
+
+            const putCommand = new PutItemCommand(putParams);
+            await dynamodb.send(putCommand);
+        }
+
+        console.log(`Successfully processed ${parsedData.length} records and inserted them into DynamoDB.`);
+    } catch (error) {
+        console.error(`Error processing file: ${error}`);
+    }
+};

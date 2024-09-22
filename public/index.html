@@ -3,43 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Who Is On Call</title>
+    <title>Who Is On Call?</title>
+    <style>
+        /* Styling for the Azure box */
+        .azure-box {
+            background-color: #008ad7;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            margin: 20px auto;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Styling for the AWS box */
+        .aws-box {
+            background-color: #ff9900;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            margin: 20px auto;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .on-call-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .engineer-info {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Who Is On Call</h1>
-    
-    <div id="onCallResult"></div>
-    
-    <script>
-        // Get the current date in YYYY-MM-DD format
-        const currentDate = new Date().toISOString().split('T')[0];
+    <h1 style="text-align: center;">Who Is On Call?</h1>
 
-        // Fetch on-call information for the current date
-        fetch('http://127.0.0.1:3001/getOnCall', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ date: currentDate })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.currentOnCall && data.nextOnCall) {
-                document.getElementById('onCallResult').innerHTML = `
-                    <h2>Current On Call</h2>
-                    <p><strong>AWS:</strong> ${data.currentOnCall.aws.name} (${data.currentOnCall.aws.email})</p>
-                    <p><strong>Azure:</strong> ${data.currentOnCall.azure.name} (${data.currentOnCall.azure.email})</p>
-                    <h2>Next Week On Call</h2>
-                    <p><strong>AWS:</strong> ${data.nextOnCall.aws.name} (${data.nextOnCall.aws.email})</p>
-                    <p><strong>Azure:</strong> ${data.nextOnCall.azure.name} (${data.nextOnCall.azure.email})</p>
-                `;
-            } else {
-                document.getElementById('onCallResult').innerText = 'No on-call information available for this date.';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching on-call data:', error);
-        });
+    <!-- AWS Box with custom styling -->
+    <div class="aws-box">
+        <div class="on-call-title">AWS On Call</div>
+        <div class="engineer-info" id="awsOnCall">Loading...</div>
+        <div class="on-call-title">AWS On Deck</div>
+        <div class="engineer-info" id="awsOnDeck">Loading...</div>
+    </div>
+
+    <!-- Azure Box with custom styling -->
+    <div class="azure-box">
+        <div class="on-call-title">Azure On Call</div>
+        <div class="engineer-info" id="azureOnCall">Loading...</div>
+        <div class="on-call-title">Azure On Deck</div>
+        <div class="engineer-info" id="azureOnDeck">Loading...</div>
+    </div>
+
+    <script>
+        // Automatically fetch the on-call data for the current and next week when the page loads
+        function fetchOnCallData() {
+            fetch('http://127.0.0.1:3001/getOnCall', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({}) // No date is passed; backend will use current date
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('API Data:', data);  // Log the data to verify the structure
+
+                // Display AWS on-call and on-deck engineers
+                document.getElementById('awsOnCall').innerText = data.currentOnCall.aws ? data.currentOnCall.aws.Engineer : 'No AWS engineer found';
+                document.getElementById('awsOnDeck').innerText = data.nextOnCall.aws ? data.nextOnCall.aws.Engineer : 'No AWS engineer found';
+
+                // Display Azure on-call and on-deck engineers
+                document.getElementById('azureOnCall').innerText = data.currentOnCall.azure ? data.currentOnCall.azure.Engineer : 'No Azure engineer found';
+                document.getElementById('azureOnDeck').innerText = data.nextOnCall.azure ? data.nextOnCall.azure.Engineer : 'No Azure engineer found';
+            })
+            .catch(err => {
+                console.error('Error fetching on-call data:', err);
+                document.getElementById('awsOnCall').innerText = 'Error loading data';
+                document.getElementById('awsOnDeck').innerText = 'Error loading data';
+                document.getElementById('azureOnCall').innerText = 'Error loading data';
+                document.getElementById('azureOnDeck').innerText = 'Error loading data';
+            });
+        }
+
+        // Fetch on-call data when the page loads
+        window.onload = fetchOnCallData;
     </script>
 </body>
 </html>

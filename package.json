@@ -11,9 +11,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.1691.0",
+    "@aws-sdk/client-dynamodb": "^3.656.0",
+    "@aws-sdk/client-s3": "^3.654.0",
     "axios": "^1.7.7",
     "body-parser": "^1.20.3",
+    "csv-parse": "^5.5.6",
     "csv-parser": "^3.0.0",
     "express": "^4.21.0",
     "xlsx": "^0.18.5"

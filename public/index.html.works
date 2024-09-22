@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who Is On Call</title>
+</head>
+<body>
+    <h1>Who Is On Call</h1>
+
+    <div>
+        <h2>Current Week</h2>
+        <div>
+            <strong>AWS:</strong> <span id="currentAWS">Loading...</span><br>
+            <strong>Azure:</strong> <span id="currentAzure">Loading...</span>
+        </div>
+    </div>
+
+    <div>
+        <h2>Next Week</h2>
+        <div>
+            <strong>AWS:</strong> <span id="nextAWS">Loading...</span><br>
+            <strong>Azure:</strong> <span id="nextAzure">Loading...</span>
+        </div>
+    </div>
+
+    <script>
+        // Automatically fetch the on-call data for the current and next week when the page loads
+        function fetchOnCallData() {
+            fetch('http://127.0.0.1:3001/getOnCall', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({}) // No date is passed; backend will use current date
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('API Data:', data);  // Log the data to verify the structure
+                
+                // Display current week on-call
+                document.getElementById('currentAWS').innerText = data.currentOnCall.aws ? data.currentOnCall.aws.Engineer : 'No AWS engineer found';
+                document.getElementById('currentAzure').innerText = data.currentOnCall.azure ? data.currentOnCall.azure.Engineer : 'No Azure engineer found';
+
+                // Display next week on-call
+                document.getElementById('nextAWS').innerText = data.nextOnCall.aws ? data.nextOnCall.aws.Engineer : 'No AWS engineer found';
+                document.getElementById('nextAzure').innerText = data.nextOnCall.azure ? data.nextOnCall.azure.Engineer : 'No Azure engineer found';
+            })
+            .catch(err => {
+                console.error('Error fetching on-call data:', err);
+                document.getElementById('currentAWS').innerText = 'Error loading data';
+                document.getElementById('currentAzure').innerText = 'Error loading data';
+                document.getElementById('nextAWS').innerText = 'Error loading data';
+                document.getElementById('nextAzure').innerText = 'Error loading data';
+            });
+        }
+
+        // Fetch on-call data when the page loads
+        window.onload = fetchOnCallData;
+    </script>
+</body>
+</html>

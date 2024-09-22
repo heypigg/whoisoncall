@@ -273,4 +273,38 @@ npm install express body-parser axios
 
 ## Make zip file smaller
 
-zip -r lambda-function.zip . -x "node_modules/*" ".git/*" "*.npmignore"  
+zip -r lambda-function.zip . -x "node_modules/*" ".git/*" "*.npmignore" "node_modules/aws-sdk/*"
+
+zip -r lambda_function.zip . -x "node_modules/*" -x "node_modules/aws-sdk/*" -x "node_modules/csv-parser/*"
+
+
+zip -r lambda_function.zip . -x "*.git*" "*.npmignore" "node_modules/aws-sdk/*"
+
+### lambda layers
+
+mkdir lambda-layer
+cd lambda-layer
+mkdir nodejs
+
+
+cd nodejs
+npm install csv-parser --prefix .
+
+
+
+cd ..
+
+
+zip -r csv-parser-layer.zip nodejs
+
+aws lambda publish-layer-version --layer-name csv-parser-layer --zip-file fileb://csv-parser-layer.zip --compatible-runtimes nodejs18.x nodejs16.x nodejs14.x --endpoint-url=http://localhost:4566
+
+
+ "LayerArn": "arn:aws:lambda:us-east-1:000000000000:layer:csv-parser-layer",
+    "LayerVersionArn": "arn:aws:lambda:us-east-1:000000000000:layer:csv-parser-layer:2",
+
+    aws lambda update-function-configuration --function-name process_csv --layers arn:aws:lambda:us-east-1:000000000000:layer:csv-parser-layer:2 --endpoint-url=http://localhost:4566
+
+
+## verify data in dynamo
+aws dynamodb scan --table-name OnCallSchedule --endpoint-url=http://localhost:4566
